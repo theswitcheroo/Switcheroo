@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.19;
 
 // To do
 // Delivery confirmation function
@@ -15,7 +15,7 @@ contract Purchase {
     uint public value;
     address public seller;
     address public buyer;
-    enum State { Created, Locked, Disputed, Unlocked, Complete }
+    enum State { Created, Locked, Disputed, Unlocked, Complete, Inactive }
     State public state;
     uint public PurchaseId
 
@@ -117,7 +117,7 @@ contract Purchase {
 //Info on mapping found here: https://ethereum.stackexchange.com/questions/9893/how-does-mapping-in-solidity-work#9894
 //Info on contract creation: http://solidity.readthedocs.io/en/develop/contracts.html
 
-//Should I be using a struct here? Does the struct replace a contract? If so is the struct less powerful?
+//I have no fucking idea if I did this right
 contract PurchaseCreator {
     struct PurchaseData {
         address public buyer;
@@ -127,15 +127,20 @@ contract PurchaseCreator {
 
     //Mapping Transaction ID's to each transaction so we can easily track later
     uint nextPurchaseId;
-    mapping(uint => PurchaseData) transactions;
+    mapping(uint => PurchaseData) purchases; //should we use uint256 instead of uint?
 
     function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
-        seller = msg.sender;
-        //how do we add in the value?
-        nextPurchaseId ++;
-        PurchaseId = nextPurchaseId
+        address newPurchase = new Purchase(buyer, seller, value) //creates new instance of Purchase contract I think
 
-        return new Purchase();//this needs to be populated with starting values for contract I believe
+        //Below attempts to create a struct for the new Purchase contract with
+        //info that can be easily looked up using the PurchaseId
+        var purchase = purchases[nextPurchaseId];
+        purchase.buyer = buyer;
+        purchase.seller = seller;
+        purchase.value = value;
+        nextPurchaseId ++;
+        PurchaseId = nextPurchaseId;
+
     }
 
 }
