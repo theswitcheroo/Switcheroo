@@ -9,7 +9,8 @@ pragma solidity ^0.4.18;
 // Add deny function for seller if txn value isn't agreed upon
 // Setup for master & child contracts
 
-
+//------------------------------------------------------------------------
+//CHILD CONTRACT
 contract Purchase {
     uint public value;
     address public seller;
@@ -20,7 +21,7 @@ contract Purchase {
 // Allow buyer to initialize transaction by depositing value
 // Buyer initializes, seller confirms by locking same amount
 // Need to figure out how to connect buyer & seller with
-// same contract in Toshi or web app 
+// same contract in Toshi or web app
     function Purchase() payable {
         buyer = msg.sender;
         value = msg.value;
@@ -110,4 +111,28 @@ contract Purchase {
 
         seller.transfer(this.balance);
     }
+}
+
+//----------------------------------------------------------------
+//PARENT CONTRACT - Master contract that creates individual purchase contracts
+
+//Info on mapping found here: https://ethereum.stackexchange.com/questions/9893/how-does-mapping-in-solidity-work#9894
+//Info on contract creation: http://solidity.readthedocs.io/en/develop/contracts.html
+
+//Should I be using a struct here? Does the struct replace a contract? If so is the struct less powerful?
+contract PurchaseCreator {
+    struct PurchaseData {
+        address public buyer;
+        address public seller;
+        uint public value;
+    }
+
+    //Mapping Transaction ID's to each transaction so we can easily track later
+    uint nextPurchaseId;
+    mapping(uint => PurchaseData) transactions;
+
+    function newPurchase (address buyer, address seller, uint value) returns (uint id) {
+
+    }
+
 }
