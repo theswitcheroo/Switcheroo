@@ -17,14 +17,12 @@ contract Purchase {
     address public buyer;
     enum State { Created, Locked, Disputed, Unlocked, Complete }
     State public state;
+    uint public PurchaseId
 
-// Allow buyer to initialize transaction by depositing value
-// Buyer initializes, seller confirms by locking same amount
-// Need to figure out how to connect buyer & seller with
-// same contract in Toshi or web app
     function Purchase() payable {
-        buyer = msg.sender;
+        buyer = msg.sender; //this needs to be changed now that we are having seller initiate
         value = msg.value;
+        state = State.Created
     }
 
     modifier condition(bool _condition) {
@@ -56,7 +54,7 @@ contract Purchase {
     /// Can only be called by the buyer before
     /// the contract is locked.
     function abort()
-        onlyBuyer
+        onlyBuyer //this needs to be changed since seller is initiating
         inState(State.Created)
     {
         Aborted();
@@ -131,8 +129,13 @@ contract PurchaseCreator {
     uint nextPurchaseId;
     mapping(uint => PurchaseData) transactions;
 
-    function newPurchase (address buyer, address seller, uint value) returns (uint id) {
+    function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
+        seller = msg.sender;
+        //how do we add in the value?
+        nextPurchaseId ++;
+        PurchaseId = nextPurchaseId
 
+        return new Purchase();//this needs to be populated with starting values for contract I believe
     }
 
 }
