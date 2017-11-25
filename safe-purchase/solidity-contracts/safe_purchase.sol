@@ -127,26 +127,27 @@ contract PurchaseCreator {
     }
 
     //Mapping Transaction ID's to each transaction so we can easily track later
-    uint nextPurchaseId;
-    mapping(uint => PurchaseData) purchases; //should we use uint256 instead of uint?
+    uint public nextPurchaseId;
+    mapping(uint => PurchaseData) public purchases; //should we use uint256 instead of uint?
 
     function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
         //Below attempts to create a struct for the new Purchase contract with
         //info that can be easily looked up using the PurchaseId
-        var purchase = purchases[nextPurchaseId];
+        PurchaseData storage purchase = purchases[nextPurchaseId];
         purchase.buyer = buyer;
         purchase.seller = seller;
         purchase.value = value;
         nextPurchaseId ++;
         PurchaseId = nextPurchaseId;
 
-        return new Purchase(); //creates new instance of Purchase contract I think
+        return new Purchase(); //attempt to create new instance of Purchase contract, but not correct
         return PurchaseId;
     }
 
     //This is an external getter function to access the data from outside
-    //the contract, but not sure if we need it...
-    
+    //the contract, I think it can be used to check status from web3
+    //not sure if useful...
+
     /*function getPurchaseData(PurchaseData) constant {
         var id = purchases[PurchaseId];
         return (purchases(PurchaseData)[id].buyer, purchases(PurchaseData)[id].seller, purchases(PurchaseData)[id].value);
