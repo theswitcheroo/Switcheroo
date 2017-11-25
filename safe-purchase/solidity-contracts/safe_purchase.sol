@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.18;
 
 // To do
 // Delivery confirmation function
@@ -17,12 +17,12 @@ contract Purchase {
     address public buyer;
     enum State { Created, Locked, Disputed, Unlocked, Complete, Inactive }
     State public state;
-    uint public PurchaseId
+    uint public PurchaseId;
 
     function Purchase() payable {
         buyer = msg.sender; //this needs to be changed now that we are having seller initiate
         value = msg.value;
-        state = State.Created
+        state = State.Created;
     }
 
     modifier condition(bool _condition) {
@@ -120,9 +120,9 @@ contract Purchase {
 //I have no fucking idea if I did this right
 contract PurchaseCreator {
     struct PurchaseData {
-        address public buyer;
-        address public seller;
-        uint public value;
+        address buyer;
+        address seller;
+        uint value;
     }
 
     //Mapping Transaction ID's to each transaction so we can easily track later
@@ -130,7 +130,7 @@ contract PurchaseCreator {
     mapping(uint => PurchaseData) purchases; //should we use uint256 instead of uint?
 
     function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
-        address newPurchase = new Purchase(buyer, seller, value) //creates new instance of Purchase contract I think
+        address newPurchase = new Purchase(); //creates new instance of Purchase contract I think
 
         //Below attempts to create a struct for the new Purchase contract with
         //info that can be easily looked up using the PurchaseId
