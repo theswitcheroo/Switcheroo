@@ -55,25 +55,25 @@ contract Purchase {
     /// Can only be called by the buyer before
     /// the contract is locked.
     function abort()
-        onlyBuyer //this needs to be changed since seller is initiating
+        onlySeller
         inState(State.Created)
     {
         Aborted();
         state = State.Inactive;
-        buyer.transfer(this.balance);
+        seller.transfer(this.balance);
     }
 
-    /// Approve the purchase as seller.
+    /// Approve the purchase as buyer.
     /// The ether will be locked until confirmItemQuality
     /// is called.
     function approvePurchase()
         inState(State.Created)
-        onlySeller
+        onlyBuyer
         condition(msg.value == value)
         payable
     {
         PurchaseApproved();
-        seller = msg.sender;
+        buyer = msg.sender;
         state = State.Locked;
     }
 
