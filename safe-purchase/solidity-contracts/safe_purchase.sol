@@ -130,17 +130,15 @@ contract PurchaseCreator {
     uint public nextPurchaseId;
     mapping(uint => PurchaseData) public purchases; //should we use uint256 instead of uint?
 
-    function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
+    function newPurchase (PurchaseData) returns (uint PurchaseId) {
         //Below attempts to create a struct for the new Purchase contract with
         //info that can be easily looked up using the PurchaseId
-        PurchaseData storage purchase = purchases[nextPurchaseId];
-        purchase.buyer = buyer;
-        purchase.seller = seller;
-        purchase.value = value;
+        address newPurchAddr = new Purchase();
+        purchases[nextPurchaseId] = newPurchAddr;
         nextPurchaseId ++;
         PurchaseId = nextPurchaseId;
 
-        return new Purchase(); //attempt to create new instance of Purchase contract, but not correct
+
         return PurchaseId;
     }
 
