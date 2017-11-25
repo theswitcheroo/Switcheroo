@@ -15,13 +15,14 @@ contract Purchase {
     uint public value;
     address public seller;
     address public buyer;
-    enum State { Created, Locked, Disputed, Unlocked, Complete, Inactive }
+    enum State { Created, Locked, Disputed, Delivered, Unlocked, Complete, Inactive }
     State public state;
     uint public PurchaseId;
 
-    function Purchase() payable {
-        buyer = msg.sender; //this needs to be changed now that we are having seller initiate
-        value = msg.value;
+    function Purchase() public payable {
+        seller = PurchaseCreator.seller;
+        buyer = PurchaseCreator.buyer;
+        value = PurchaseCreator.value;
         state = State.Created;
     }
 
@@ -130,8 +131,6 @@ contract PurchaseCreator {
     mapping(uint => PurchaseData) purchases; //should we use uint256 instead of uint?
 
     function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
-        address newPurchase = new Purchase(); //creates new instance of Purchase contract I think
-
         //Below attempts to create a struct for the new Purchase contract with
         //info that can be easily looked up using the PurchaseId
         var purchase = purchases[nextPurchaseId];
@@ -141,6 +140,16 @@ contract PurchaseCreator {
         nextPurchaseId ++;
         PurchaseId = nextPurchaseId;
 
+        return new Purchase(); //creates new instance of Purchase contract I think
+        return PurchaseId;
     }
+
+    //This is an external getter function to access the data from outside
+    //the contract, but not sure if we need it...
+    
+    /*function getPurchaseData(PurchaseData) constant {
+        var id = purchases[PurchaseId];
+        return (purchases(PurchaseData)[id].buyer, purchases(PurchaseData)[id].seller, purchases(PurchaseData)[id].value);
+    }*/
 
 }
