@@ -32,7 +32,7 @@ contract Purchase {
         // buyer = PurchaseCreator.buyer;
         price = PurchaseCreator.price;
         deposit_seller = price * 0.1; // May want to calculate based on price
-        fee_seller = price * .01; // Decimal's?
+        fee_seller = price * .01; // Decimals? We'll want to denominate price in wei to cover this
         status = Status.initialized;
     }
 
@@ -51,7 +51,7 @@ contract Purchase {
         _;
     }
 
-    modifier requireState(Status _status) {
+    modifier requireStatus(Status _status) {
         require(status == _status);
         _;
     }
@@ -62,7 +62,7 @@ contract Purchase {
     event ItemAccepted();
     event BuyerPayout();
 
-    // TODO: constant ??
+    // TODO: constant ?? See here: http://solidity.readthedocs.io/en/develop/contracts.html?view-functions#view-functions
     function inState(Status _status) constant bool {
         return status == _status;
     }
@@ -72,7 +72,7 @@ contract Purchase {
     /// the contract is locked.
     function abort()
         onlySeller
-        requireState(Status.initialized)
+        requireStatus(Status.initialized)
     {
         // TODO: decide where to put events in functions
         Aborted();
@@ -87,7 +87,7 @@ contract Purchase {
     /// The ether will be locked until confirmItemQuality
     /// is called.
     function acceptPurchaseTerms()
-        requireState(Status.initialized)
+        requireStatus(Status.initialized)
         onlyBuyer
         condition(msg.value == value) // TODO: confirm value conditions
         payable
@@ -100,7 +100,7 @@ contract Purchase {
     /// This will release the locked ether.
     function setStatusDelivered()
         // TODO: only admin?
-        requireState(Status.locked)
+        requireStatus(Status.locked)
     {
         ItemAccepted();
         state = State.delivered;
@@ -170,9 +170,9 @@ contract Purchase {
     // Transaction is complete, contract locked
     function getPaid()
         onlySeller
-        inState(State.Unlocked)
+        requireStatus(Status.delivered)
     {
-        state = State.Complete;
+        status = Status.complete;
 
         seller.transfer(this.balance);
     }
