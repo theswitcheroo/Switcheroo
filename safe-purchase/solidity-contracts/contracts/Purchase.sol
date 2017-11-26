@@ -12,7 +12,6 @@ pragma solidity ^0.4.18;
 //------------------------------------------------------------------------
 //CHILD CONTRACT
 contract Purchase {
-    // Admin?
     uint public price;
     uint public shipping_cost;
     uint public shipping_cost_return;
@@ -22,7 +21,9 @@ contract Purchase {
     uint public fee_seller;
     address public seller;
     address public buyer;
-    enum Status {initialized, locked, seller_canceled, disputed, delivered, dispute_canceled, return_delivered, completed, inactive}
+    address public admin;
+    enum Status {initialized, locked, seller_canceled, disputed, delivered,
+        dispute_canceled, return_delivered, completed, inactive}
     Status public status;
     uint public PurchaseId;
 
@@ -61,6 +62,8 @@ contract Purchase {
     event ItemDelivered();
     event ItemAccepted();
     event BuyerPayout();
+    event SellerPayout();
+    event AdminPayout();
 
     // TODO: constant ?? See here: http://solidity.readthedocs.io/en/develop/contracts.html?view-functions#view-functions
     function inState(Status _status) constant bool {
@@ -76,7 +79,7 @@ contract Purchase {
     {
         // TODO: decide where to put events in functions
         Aborted();
-        state = State.inactive;
+        state = Status.inactive;
 
         uint balance = this.balance;
         this.balance = 0;
@@ -122,7 +125,7 @@ contract Purchase {
     {
     }
 
-    function withdrawBuyerFunds()
+    function withdrawBuyerFunds() //test that this can't be called during a status it shouldn't be (e.g. initialized)
         onlyBuyer
     {
         if (inState(Status.delivered)) {
@@ -139,7 +142,7 @@ contract Purchase {
         } else if (inState(Status.dispute_canceled)) {
             _buyer_payout = deposit_buyer - shipping_cost - shipping_cost_return;
             deposit_buyer = 0;
-            shipping_cost_return = 0; //why set shipping to 0? don't we need to pay it to ourselves later?
+            shipping_cost_return = 0; //TODO why set shipping to 0? don't we need to pay it to ourselves later?
             shipping_cost = 0;
             buyer.transfer(_buyer_payout);
 
@@ -151,14 +154,32 @@ contract Purchase {
             buyer.transfer(_buyer_payout);
 
         } else {
-            return false;
+            revert; //changed from "return false" to properly throw error & save gas
+            //see link here: http://solidity.readthedocs.io/en/develop/control-structures.html?highlight=require#error-handling-assert-require-revert-and-exceptions
         }
 
-      BuyerPayout();
+        BuyerPayout();
     }
 
     function withdrawSellerFunds()
+        onlySeller
     {
+        if(inState(Status.delivered)) {
+            _seller_payout = price + deposit_seller - fee_seller
+            price = 0
+            deposit_seller = 0
+
+        } else if(inState(Status.return_delivered)) {
+
+        } else if(inState(Status.dispute_canceled)) {
+
+        } else if(inState(Status.return_canceled)) {
+
+        } else {
+            revert;
+        }
+
+        SellerPayout();
     }
 
     function withdrawSwitcherooFunds()
@@ -168,14 +189,14 @@ contract Purchase {
 
     // Seller withdraws payment for item
     // Transaction is complete, contract locked
-    function getPaid()
+    /*function getPaid()
         onlySeller
         requireStatus(Status.delivered)
     {
         status = Status.complete;
 
         seller.transfer(this.balance);
-    }
+    }*/
 }
 
 //----------------------------------------------------------------
