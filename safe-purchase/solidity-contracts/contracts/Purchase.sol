@@ -12,7 +12,7 @@ pragma solidity ^0.4.18;
 //------------------------------------------------------------------------
 //CHILD CONTRACT
 contract Purchase {
-    uint public price;
+    uint public price; //TODO add a guard that this shouldn't be <=0
     uint public shipping_cost;
     uint public shipping_cost_return;
     uint public deposit_buyer;
@@ -166,24 +166,45 @@ contract Purchase {
     {
         if(inState(Status.delivered)) {
             _seller_payout = price + deposit_seller - fee_seller
+            _admin_payout = fee_seller
             price = 0
             deposit_seller = 0
+            fee_seller = 0
+            admin.transfer(_admin_payout)
+            seller.transfer(_seller_payout)
 
         } else if(inState(Status.return_delivered)) {
+            _seller_payout = deposit_seller - fee_seller - shipping_cost_return
+            _admin_payout = fee_seller + shipping_cost_return
+            deposit_seller = 0
+            fee_seller = 0
+            shipping_cost_return = 0
+            admin.transfer(_admin_payout)
+            seller.transfer(_seller_payout)
 
         } else if(inState(Status.dispute_canceled)) {
+            _seller_payout = price + deposit_seller - fee_seller
+            _admin_payout = fee_seller
+            price = 0
+            deposit_seller = 0
+            fee_seller = 0
+            admin.transfer(_admin_payout)
+            seller.transfer(_seller_payout)
 
-        } else if(inState(Status.return_canceled)) {
+        } else if(inState(Status.seller_canceled)) {
+            _seller_payout = deposit_seller - fee_seller - shipping_cost
+            _admin_payout = fee_seller + shipping_cost
+            deposit_seller = 0
+            fee_seller = 0
+            shipping_cost = 0
+            admin.transfer(_admin_payout)
+            seller.transfer(_seller_payout)
 
         } else {
             revert;
         }
 
         SellerPayout();
-    }
-
-    function withdrawSwitcherooFunds()
-    {
     }
 
 
