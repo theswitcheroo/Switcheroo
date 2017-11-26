@@ -125,15 +125,26 @@ contract Purchase {
         onlyBuyer
     {
       if (inState(Status.delivered)) {
-        _buyer_deposit = buyer_deposit; // TODO: Check underscore'd variables
-        buyer_deposit = 0;
-        buyer.transfer(_buyer_deposit);
+        _buyer_payout = deposit_buyer;
+        deposit_buyer = 0;
+        buyer.transfer(_buyer_payout);
       } else if (inState(Status.return_delivered)) {
-
+        _buyer_payout = deposit_buyer + price;
+        deposit_buyer = 0;
+        price = 0;
+        buyer.transfer(_buyer_payout);
       } else if (inState(Status.dispute_canceled)) {
-
-      } else if (inState(Status.dispute_canceled)) {
-
+        _buyer_payout = deposit_buyer - shipping_cost_return;
+        deposit_buyer = 0;
+        shipping_cost_return = 0;
+        shipping_cost = 0;
+        buyer.transfer(_buyer_payout);
+      } else if (inState(Status.seller_canceled)) {
+        _buyer_payout = deposit_buyer + price + fee_buyer;
+        deposit_buyer = 0;
+        price = 0;
+        fee_buyer = 0;
+        buyer.transfer(_buyer_payout);
       } else {
         return false;
       }
