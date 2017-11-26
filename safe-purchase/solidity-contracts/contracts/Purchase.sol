@@ -1,12 +1,11 @@
 pragma solidity ^0.4.18;
 
 // To do
-// Delivery confirmation function
-// Front end interaction hooks?
-// Check final withdraws for security holes
+// Delivery confirmation function - DONE
+// Front end interaction hooks? - Handled by web3
+// Add final withdraws - DONE
 // Add in dispute function for buyer
 // Add in deposits - currently just txn value
-// Add deny function for seller if txn value isn't agreed upon
 // Setup for master & child contracts
 
 //------------------------------------------------------------------------
@@ -52,6 +51,11 @@ contract Purchase {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(msg.sender == admin);
+        _;
+    }
+
     modifier requireStatus(Status _status) {
         require(status == _status);
         _;
@@ -59,8 +63,12 @@ contract Purchase {
 
     event Aborted();
     event PurchaseApproved();
+    event SellerCanceled();
     event ItemDelivered();
-    event ItemAccepted();
+    event ItemAccepted(); //still need this?
+    event BuyerDisputed();
+    event DisputeCanceled();
+    event ReturnDelivered();
     event BuyerPayout();
     event SellerPayout();
     event AdminPayout();
@@ -79,7 +87,7 @@ contract Purchase {
     {
         // TODO: decide where to put events in functions
         Aborted();
-        state = Status.inactive;
+        status = Status.inactive;
 
         uint balance = this.balance;
         this.balance = 0;
@@ -87,8 +95,7 @@ contract Purchase {
     }
 
     /// Approve the purchase as buyer.
-    /// The ether will be locked until confirmItemQuality
-    /// is called.
+    /// The ether will be locked until state is changed by admin
     function acceptPurchaseTerms()
         requireStatus(Status.initialized)
         onlyBuyer
@@ -97,34 +104,55 @@ contract Purchase {
     {
         PurchaseApproved();
         buyer = msg.sender;
-        state = State.Locked;
+        status = Status.locked;
     }
 
-    /// This will release the locked ether.
+    // This will release the locked ether.
     function setStatusDelivered()
-        // TODO: only admin?
+        onlyAdmin
         requireStatus(Status.locked)
     {
         ItemAccepted();
         state = State.delivered;
     }
 
+    // Disputed item has been returned to seller
     function setStatusReturnDelivered()
+        onlyAdmin
+        requireStatus(Status.disputed)
     {
+        ReturnDelivered();
+        status = Status.return_delivered;
     }
 
+    // Seller failed to mail item within 72 hrs of buyer locking money
     function setStatusSellerCanceled()
+        onlyAdmin
+        requireStatus(Status.locked)
     {
+        SellerCanceled();
+        status = Status.seller_canceled;
     }
 
+    // Buyer failed to mail returned item within 72 hrs of disputing
     function setStatusDisputeCanceled()
+        onlyAdmin
+        requireStatus(Status.disputed)
     {
+        DisputeCanceled();
+        status = Status.dispute_canceled;
     }
 
+    // Buyer disputed item quality
     function setStatusDisputed()
+        onlyAdmin //TODO decide if we are letting buyer do this or only us
+        requireStatus(Status.locked)
     {
+        BuyerDisputed();
+        status = Status.disputed
     }
 
+    // Allows buyer to withdraw funds depending on the terminal state
     function withdrawBuyerFunds() //test that this can't be called during a status it shouldn't be (e.g. initialized)
         onlyBuyer
     {
@@ -171,6 +199,7 @@ contract Purchase {
         BuyerPayout();
     }
 
+    // Allows seller to withdraw funds depending on the terminal state
     function withdrawSellerFunds()
         onlySeller
     {
@@ -216,7 +245,7 @@ contract Purchase {
 
         SellerPayout();
     }
-    
+
 }
 
 //----------------------------------------------------------------
