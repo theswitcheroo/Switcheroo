@@ -125,34 +125,34 @@ contract Purchase {
     function withdrawBuyerFunds()
         onlyBuyer
     {
-      if (inState(Status.delivered)) {
-        _buyer_payout = deposit_buyer;
-        deposit_buyer = 0;
-        buyer.transfer(_buyer_payout);
+        if (inState(Status.delivered)) {
+            _buyer_payout = deposit_buyer - shipping_cost;
+            deposit_buyer = 0;
+            buyer.transfer(_buyer_payout);
 
-      } else if (inState(Status.return_delivered)) {
-        _buyer_payout = deposit_buyer + price;
-        deposit_buyer = 0;
-        price = 0;
-        buyer.transfer(_buyer_payout);
+        } else if (inState(Status.return_delivered)) {
+            _buyer_payout = deposit_buyer + price - shipping_cost;
+            deposit_buyer = 0;
+            price = 0;
+            buyer.transfer(_buyer_payout);
 
-      } else if (inState(Status.dispute_canceled)) {
-        _buyer_payout = deposit_buyer - shipping_cost_return;
-        deposit_buyer = 0;
-        shipping_cost_return = 0;
-        shipping_cost = 0;
-        buyer.transfer(_buyer_payout);
+        } else if (inState(Status.dispute_canceled)) {
+            _buyer_payout = deposit_buyer - shipping_cost - shipping_cost_return;
+            deposit_buyer = 0;
+            shipping_cost_return = 0; //why set shipping to 0? don't we need to pay it to ourselves later?
+            shipping_cost = 0;
+            buyer.transfer(_buyer_payout);
 
-      } else if (inState(Status.seller_canceled)) {
-        _buyer_payout = deposit_buyer + price + fee_buyer;
-        deposit_buyer = 0;
-        price = 0;
-        fee_buyer = 0;
-        buyer.transfer(_buyer_payout);
+        } else if (inState(Status.seller_canceled)) {
+            _buyer_payout = deposit_buyer + price + fee_buyer;
+            deposit_buyer = 0;
+            price = 0;
+            fee_buyer = 0;
+            buyer.transfer(_buyer_payout);
 
-      } else {
-        return false;
-      }
+        } else {
+            return false;
+        }
 
       BuyerPayout();
     }
