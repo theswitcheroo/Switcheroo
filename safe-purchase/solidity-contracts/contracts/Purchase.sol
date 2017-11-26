@@ -12,18 +12,28 @@ pragma solidity ^0.4.18;
 //------------------------------------------------------------------------
 //CHILD CONTRACT
 contract Purchase {
-    uint public value;
+    // Admin?
+    uint public price;
+    uint public shipping_cost;
+    uint public shipping_cost_return;
+    uint public deposit_buyer;
+    uint public deposit_seller;
+    uint public fee_buyer;
+    uint public fee_seller;
     address public seller;
     address public buyer;
-    enum State { Created, Locked, Disputed, Delivered, Unlocked, Complete, Inactive }
-    State public state;
+    enum Status {initialized, locked, seller_canceled, disputed, delivered, dispute_canceled, return_delivered, completed, inactive}
+    Status public status;
     uint public PurchaseId;
 
+    // TODO: Lookup value passthroughs from parent.
     function Purchase() public payable {
         seller = PurchaseCreator.seller;
-        buyer = PurchaseCreator.buyer;
-        value = PurchaseCreator.value;
-        state = State.Created;
+        // buyer = PurchaseCreator.buyer;
+        price = PurchaseCreator.price;
+        deposit_seller = price * 0.1; // May want to calculate based on price
+        fee_seller = price * .01; // Decimal's?
+        status = Status.initialized;
     }
 
     modifier condition(bool _condition) {
@@ -41,8 +51,8 @@ contract Purchase {
         _;
     }
 
-    modifier inState(State _state) {
-        require(state == _state);
+    modifier requireState(Status _status) {
+        require(status == _status);
         _;
     }
 
@@ -51,25 +61,34 @@ contract Purchase {
     event ItemDelivered();
     event ItemAccepted();
 
+    // TODO: constant ??
+    function inState(Status _status) constant bool {
+        return status == _status;
+    }
+
     /// Abort the purchase and reclaim the ether.
-    /// Can only be called by the buyer before
+    /// Can only be called by the seller before
     /// the contract is locked.
     function abort()
         onlySeller
-        inState(State.Created)
+        requireState(Status.initialized)
     {
+        // TODO: decide where to put events in functions
         Aborted();
-        state = State.Inactive;
-        seller.transfer(this.balance);
+        state = State.inactive;
+
+        uint balance = this.balance;
+        this.balance = 0;
+        seller.transfer(balance);
     }
 
     /// Approve the purchase as buyer.
     /// The ether will be locked until confirmItemQuality
     /// is called.
-    function approvePurchase()
-        inState(State.Created)
+    function acceptPurchaseTerms()
+        requireState(Status.initialized)
         onlyBuyer
-        condition(msg.value == value)
+        condition(msg.value == value) // TODO: confirm value conditions
         payable
     {
         PurchaseApproved();
@@ -77,28 +96,57 @@ contract Purchase {
         state = State.Locked;
     }
 
-    /// Buyer confirms item is what they wanted.
     /// This will release the locked ether.
-    function confirmItemQuality()
-        onlyBuyer
-        inState(State.Locked)
+    function setStatusDelivered()
+        // TODO: only admin?
+        requireState(Status.locked)
     {
         ItemAccepted();
-        // It is important to change the state first because
-        // otherwise, the contracts called using `send` below
-        // can call in again here.
-        state = State.Unlocked;
-
-        /* WARNING: this function may allow buyer to call
-        multiple times and withdraw more than their deposit.
-        NEEDS MORE RESEARCH!!
-
-        Withdraw must take into account shipping fee,
-        switcheroo fee, and any punishments
-        */
-
-        buyer.transfer(value);
+        state = State.delivered;
     }
+
+    function setStatusReturnDelivered()
+    {
+    }
+
+    function setStatusSellerCanceled()
+    {
+    }
+
+    function setStatusDisputeCanceled()
+    {
+    }
+
+    function setStatusDisputed()
+    {
+    }
+
+    function withdrawBuyerFunds()
+        onlyBuyer
+    {
+      if (inState(Status.delivered)) {
+        _buyer_deposit = buyer_deposit; // TODO: Check underscore'd variables
+        buyer_deposit = 0;
+        buyer.transfer(_buyer_deposit);
+      } else if (inState(Status.return_delivered)) {
+
+      } else if (inState(Status.dispute_canceled)) {
+
+      } else if (inState(Status.dispute_canceled)) {
+
+      } else {
+        return false;
+      }
+    }
+
+    function withdrawSellerFunds()
+    {
+    }
+
+    function withdrawSwitcherooFunds()
+    {
+    }
+
 
     // Seller withdraws payment for item
     // Transaction is complete, contract locked
@@ -130,15 +178,17 @@ contract PurchaseCreator {
     uint public nextPurchaseId;
     mapping(uint => PurchaseData) public purchases; //should we use uint256 instead of uint?
 
-    function newPurchase (PurchaseData) returns (uint PurchaseId) {
+    function newPurchase (address buyer, address seller, uint value) returns (uint PurchaseId) {
         //Below attempts to create a struct for the new Purchase contract with
         //info that can be easily looked up using the PurchaseId
-        address newPurchAddr = new Purchase();
-        purchases[nextPurchaseId] = newPurchAddr;
+        PurchaseData storage purchase = purchases[nextPurchaseId];
+        purchase.buyer = buyer;
+        purchase.seller = seller;
+        purchase.value = value;
         nextPurchaseId ++;
         PurchaseId = nextPurchaseId;
 
-
+        return new Purchase(); //attempt to create new instance of Purchase contract, but not correct
         return PurchaseId;
     }
 
