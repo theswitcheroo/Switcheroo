@@ -157,38 +157,71 @@ contract Purchase {
         onlyBuyer
     {
         if (inState(Status.delivered)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_buyer != 0);
+            require(shipping_cost != 0);
+            require(fee_buyer != 0);
+
+            // Run payout calculations & zero out balances
             _buyer_payout = deposit_buyer - shipping_cost - fee_buyer;
             _admin_payout = shipping_cost + fee_buyer;
             deposit_buyer = 0;
             shipping_cost = 0;
             fee_buyer = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             buyer.transfer(_buyer_payout);
 
         } else if (inState(Status.return_delivered)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_buyer != 0);
+            require(shipping_cost != 0);
+            require(fee_buyer != 0);
+            require(price != 0);
+
+            // Run payout calculations & zero out balances
             _buyer_payout = deposit_buyer + price - shipping_cost - fee_buyer;
             _admin_payout = shipping_cost + fee_buyer;
             deposit_buyer = 0;
             price = 0;
             shipping_cost = 0;
             fee_buyer = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             buyer.transfer(_buyer_payout);
 
         } else if (inState(Status.dispute_canceled)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_buyer != 0);
+            require(shipping_cost != 0);
+            require(fee_buyer != 0);
+            require(shipping_cost_return != 0);
+
+            // Run payout calculations & zero out balances
             _buyer_payout = deposit_buyer - shipping_cost - shipping_cost_return - fee_buyer;
             _admin_payout = shipping_cost + shipping_cost_return + fee_buyer;
             deposit_buyer = 0;
             shipping_cost_return = 0;
             shipping_cost = 0;
             fee_buyer = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             buyer.transfer(_buyer_payout);
 
         } else if (inState(Status.seller_canceled)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_buyer != 0);
+            require(price != 0);
+
+            // Run payout calculations & zero out balances
             _buyer_payout = deposit_buyer + price;
             deposit_buyer = 0;
             price = 0;
+
+            // Transfer payouts
             buyer.transfer(_buyer_payout);
 
         } else {
@@ -204,38 +237,70 @@ contract Purchase {
         onlySeller
     {
         if(inState(Status.delivered)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_seller != 0);
+            require(price != 0);
+            require(fee_seller != 0);
+
+            // Run payout calculations & zero out balances
             _seller_payout = price + deposit_seller - fee_seller;
             _admin_payout = fee_seller;
             price = 0;
             deposit_seller = 0;
             fee_seller = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             seller.transfer(_seller_payout);
 
         } else if(inState(Status.return_delivered)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_seller != 0);
+            require(shipping_cost_return != 0);
+            require(fee_seller != 0);
+
+            // Run payout calculations & zero out balances
             _seller_payout = deposit_seller - fee_seller - shipping_cost_return;
             _admin_payout = fee_seller + shipping_cost_return;
             deposit_seller = 0;
             fee_seller = 0;
             shipping_cost_return = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             seller.transfer(_seller_payout);
 
         } else if(inState(Status.dispute_canceled)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_seller != 0);
+            require(price != 0);
+            require(fee_seller != 0);
+
+            // Run payout calculations & zero out balances
             _seller_payout = price + deposit_seller - fee_seller;
             _admin_payout = fee_seller;
             price = 0;
             deposit_seller = 0;
             fee_seller = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             seller.transfer(_seller_payout);
 
         } else if(inState(Status.seller_canceled)) {
+            // Check that this func hasn't already been called for this txn
+            require(deposit_seller != 0);
+            require(shipping_cost != 0);
+            require(fee_seller != 0);
+
+            // Run payout calculations & zero out balances
             _seller_payout = deposit_seller - fee_seller - shipping_cost;
             _admin_payout = fee_seller + shipping_cost;
             deposit_seller = 0;
             fee_seller = 0;
             shipping_cost = 0;
+
+            // Transfer payouts
             admin.transfer(_admin_payout);
             seller.transfer(_seller_payout);
 
