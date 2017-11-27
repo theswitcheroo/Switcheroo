@@ -27,12 +27,22 @@ contract Purchase {
     uint public PurchaseId;
 
     // TODO: Lookup value passthroughs from parent.
-    function Purchase() public payable {
+    // Do we pass through seller payment from parent?
+    function Purchase()
+        public
+        payable
+    {
+        require(msg.value == price + deposit_seller)
         seller = PurchaseCreator.seller;
-        // buyer = PurchaseCreator.buyer;
         price = PurchaseCreator.price;
-        deposit_seller = price * 0.1; // May want to calculate based on price
-        fee_seller = price * .01; // Decimals? We'll want to denominate price in wei to cover this
+
+        if((price * .1) <= 10) { //TODO this shit is all wrong - literals are in ETH
+            deposit_seller = 10
+        } else {
+            deposit_seller = price * .1
+        }
+        
+        fee_seller = 1;
         status = Status.initialized;
     }
 
