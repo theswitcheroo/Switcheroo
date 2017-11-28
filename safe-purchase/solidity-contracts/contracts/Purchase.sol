@@ -4,7 +4,7 @@ pragma solidity ^0.4.18;
 // Delivery confirmation function - DONE
 // Front end interaction hooks? - Handled by web3
 // Add final withdraws - DONE
-// Add in dispute function for buyer
+// Add in dispute function for buyer - DONE
 // Add in deposits - currently just txn value
 // Setup for master & child contracts
 
@@ -35,13 +35,6 @@ contract Purchase {
         require(msg.value == price + deposit_seller)
         seller = PurchaseCreator.seller;
         price = PurchaseCreator.price;
-
-        if((price * .1) <= 10) { //TODO this shit is all wrong - literals are in ETH
-            deposit_seller = 10
-        } else {
-            deposit_seller = price * .1
-        }
-        
         fee_seller = 1;
         status = Status.initialized;
     }
@@ -323,6 +316,7 @@ contract Purchase {
 
 }
 
+/*
 //----------------------------------------------------------------
 //PARENT CONTRACT - Master contract that creates individual purchase contracts
 
@@ -359,9 +353,10 @@ contract PurchaseCreator {
     //the contract, I think it can be used to check status from web3
     //not sure if useful...
 
-    /*function getPurchaseData(PurchaseData) constant {
+    function getPurchaseData(PurchaseData) constant {
         var id = purchases[PurchaseId];
         return (purchases(PurchaseData)[id].buyer, purchases(PurchaseData)[id].seller, purchases(PurchaseData)[id].value);
-    }*/
+    }
 
 }
+*/
