@@ -18,8 +18,30 @@ contract PurchaseCreator {
     uint public nextPurchaseId;
     mapping(uint => PurchaseData) public purchases;
 
+    //Set variables for pausing contract (pauseContract) function
+    bool private stopped = false;
+    address private owner;
+
+    modifier isAdmin() {
+        require(msg.sender == owner);
+        _;
+    }
+
+    //Enforce pause button function
+    modifier isActive() {
+        require(stopped == false);
+        _;
+    }
+
+    //Set Switcheroo as owner of contract
+    //TODO make sure we are original msg.sender of the PurchaseCreator, and that this doesn't change
+    function PurchaseCreator() public {
+        owner = msg.sender;
+    }
+
     //Creates new struct value & ties it to a PurchaseId key in the mapping
-    function newPurchaseLog(address buyer, address seller, uint txnValue) public returns (uint PurchaseId) {
+    //QUESTION do we need to make this the constructor function?
+    function newPurchaseLog(address buyer, address seller, uint txnValue) isActive public returns (uint PurchaseId) {
         PurchaseId = nextPurchaseId++;
         purchases[PurchaseId] = PurchaseData(buyer, seller, txnValue);
 
@@ -28,9 +50,14 @@ contract PurchaseCreator {
 
     //Creates new Purchase child contract with the PurchaseId
     //Can use PurchaseId in the child contract to pull in PurchaseData struct
-    function newPurchaseContract(uint PurchaseId) public payable {
+    function newPurchaseContract(uint PurchaseId) isActive public payable {
         //http://solidity.readthedocs.io/en/develop/control-structures.html#creating-contracts-via-new
         //Above link has example of creating + endowing contract with ether
         Purchase newPurch = (new Purchase).value(purchases[PurchaseId].txnValue)(PurchaseId);
+    }
+
+    //Pause contract operation
+    function pauseContract() isAdmin public {
+        stopped = !stopped;
     }
 }
