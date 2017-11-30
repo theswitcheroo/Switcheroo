@@ -11,7 +11,7 @@ import "Purchase_Factory.sol";
 
 //------------------------------------------------------------------------
 //CHILD CONTRACT
-contract Purchase {
+contract Purchase is PurchaseCreator {
     uint public txnValue;
     uint public price;
     uint public shipping_cost;
@@ -22,7 +22,7 @@ contract Purchase {
     uint public fee_seller;
     address public seller;
     address public buyer;
-    address public admin;
+    //address public admin;
     enum Status {initialized, locked, seller_canceled, disputed, delivered,
         dispute_canceled, return_delivered, completed, inactive}
     Status public status;
@@ -81,7 +81,7 @@ contract Purchase {
     event AdminPayout();
 
     // TODO: constant ?? See here: http://solidity.readthedocs.io/en/develop/contracts.html?view-functions#view-functions
-    function inState(Status _status) {
+    function inState(Status _status) private {
         return status == _status;
     }
 
@@ -91,6 +91,7 @@ contract Purchase {
     function abort()
         onlySeller
         requireStatus(Status.initialized)
+        private
     {
         // TODO: decide where to put events in functions
         Aborted();
@@ -108,6 +109,7 @@ contract Purchase {
         onlyBuyer
         condition(msg.value == value) // TODO: confirm value conditions
         payable
+        private
     {
         PurchaseApproved();
         buyer = msg.sender;
@@ -118,6 +120,7 @@ contract Purchase {
     function setStatusDelivered()
         onlyAdmin
         requireStatus(Status.locked)
+        private
     {
         ItemAccepted();
         state = State.delivered;
@@ -127,6 +130,7 @@ contract Purchase {
     function setStatusReturnDelivered()
         onlyAdmin
         requireStatus(Status.disputed)
+        private
     {
         ReturnDelivered();
         status = Status.return_delivered;
@@ -136,6 +140,7 @@ contract Purchase {
     function setStatusSellerCanceled()
         onlyAdmin
         requireStatus(Status.locked)
+        private
     {
         SellerCanceled();
         status = Status.seller_canceled;
@@ -145,6 +150,7 @@ contract Purchase {
     function setStatusDisputeCanceled()
         onlyAdmin
         requireStatus(Status.disputed)
+        private
     {
         DisputeCanceled();
         status = Status.dispute_canceled;
@@ -154,6 +160,7 @@ contract Purchase {
     function setStatusDisputed()
         onlyAdmin //TODO decide if we are letting buyer do this or only us
         requireStatus(Status.locked)
+        private
     {
         BuyerDisputed();
         status = Status.disputed;
@@ -162,6 +169,7 @@ contract Purchase {
     // Allows buyer to withdraw funds depending on the terminal state
     function withdrawBuyerFunds() //test that this can't be called during a status it shouldn't be (e.g. initialized)
         onlyBuyer
+        private
     {
         if (inState(Status.delivered)) {
             // Check that this func hasn't already been called for this txn
@@ -242,6 +250,7 @@ contract Purchase {
     // Allows seller to withdraw funds depending on the terminal state
     function withdrawSellerFunds()
         onlySeller
+        private
     {
         if(inState(Status.delivered)) {
             // Check that this func hasn't already been called for this txn

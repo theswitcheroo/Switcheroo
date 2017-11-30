@@ -9,10 +9,10 @@ import "Purchase.sol";
 
 contract PurchaseCreator {
     struct PurchaseData {
-        //address buyer;
-        //TODO check if we can pass buyer from child contract back to the mapping
         address seller;
         uint txnValue;
+        //address buyer;
+        //TODO check if we can pass buyer from child contract back to the mapping
     }
 
     //Mapping Transaction ID's to each transaction so we can easily track later
