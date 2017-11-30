@@ -20,26 +20,26 @@ contract Purchase is PurchaseCreator {
     uint public deposit_seller;
     uint public fee_buyer;
     uint public fee_seller;
-    address public seller;
+    //address public seller;
+    PurchaseCreator public seller;
     address public buyer;
-    //address public admin;
+    address public admin;
     enum Status {initialized, locked, seller_canceled, disputed, delivered,
         dispute_canceled, return_delivered, completed, inactive}
     Status public status;
     uint public PurchaseId;
 
-    // TODO: Lookup value passthroughs from parent.
-    // Do we pass through seller payment from parent?
+
     function Purchase()
         public
         payable
     {
-        require(msg.value > 0);
-        txnValue = msg.value;
-        seller = msg.sender; //TODO this isn't right, think it will set the creator contract as seller
-        PurchaseCreator admin = PurchaseCreator.owner; //TODO lookup inheritance
-        price = PurchaseCreator.price;
-        fee_seller = 1;
+        //require(msg.value > 0); FLAG disabled feature
+        txnValue = msg.value; //QUESTION does this need to be referencing PurchaseCreator?
+        seller = PurchaseCreator[PurchaseId].seller;
+        admin = PurchaseCreator.owner;
+        //price = txnValue;
+        //fee_seller = 1;
         status = Status.initialized;
     }
 
@@ -81,7 +81,7 @@ contract Purchase is PurchaseCreator {
     event AdminPayout();
 
     // TODO: constant ?? See here: http://solidity.readthedocs.io/en/develop/contracts.html?view-functions#view-functions
-    function inState(Status _status) private {
+    function inState(Status _status) view private {
         return status == _status;
     }
 
@@ -107,23 +107,24 @@ contract Purchase is PurchaseCreator {
     function acceptPurchaseTerms()
         requireStatus(Status.initialized)
         onlyBuyer
-        condition(msg.value == value) // TODO: confirm value conditions
+        //condition(msg.value == price) FLAG disabled feature
         payable
         private
     {
         PurchaseApproved();
         buyer = msg.sender;
+        price = msg.value; //FLAG temporary variable
         status = Status.locked;
     }
 
-    // This will release the locked ether.
+    // This will release the locked ether
     function setStatusDelivered()
         onlyAdmin
         requireStatus(Status.locked)
         private
     {
         ItemAccepted();
-        state = State.delivered;
+        status = Status.delivered;
     }
 
     // Disputed item has been returned to seller
@@ -167,7 +168,8 @@ contract Purchase is PurchaseCreator {
     }
 
     // Allows buyer to withdraw funds depending on the terminal state
-    function withdrawBuyerFunds() //test that this can't be called during a status it shouldn't be (e.g. initialized)
+    //FLAG disabled features
+    /*function withdrawBuyerFunds() //TODO test that this can't be called during a status it shouldn't be (e.g. initialized)
         onlyBuyer
         private
     {
@@ -245,7 +247,7 @@ contract Purchase is PurchaseCreator {
         }
 
         BuyerPayout();
-    }
+    }*/
 
     // Allows seller to withdraw funds depending on the terminal state
     function withdrawSellerFunds()
@@ -254,12 +256,13 @@ contract Purchase is PurchaseCreator {
     {
         if(inState(Status.delivered)) {
             // Check that this func hasn't already been called for this txn
-            require(deposit_seller != 0);
+            //FLAG disabled features
+            //require(deposit_seller != 0);
             require(price != 0);
-            require(fee_seller != 0);
+            //require(fee_seller != 0);
 
             // Run payout calculations & zero out balances
-            _seller_payout = price + deposit_seller - fee_seller;
+            _seller_payout = price; //+ deposit_seller - fee_seller;
             _admin_payout = fee_seller;
             price = 0;
             deposit_seller = 0;
@@ -305,9 +308,9 @@ contract Purchase is PurchaseCreator {
 
         } else if(inState(Status.seller_canceled)) {
             // Check that this func hasn't already been called for this txn
-            require(deposit_seller != 0);
-            require(shipping_cost != 0);
-            require(fee_seller != 0);
+            //require(deposit_seller != 0);
+            //require(shipping_cost != 0);
+            //require(fee_seller != 0);
 
             // Run payout calculations & zero out balances
             _seller_payout = deposit_seller - fee_seller - shipping_cost;
