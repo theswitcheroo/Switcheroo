@@ -54,7 +54,8 @@ contract PurchaseCreator {
     function newPurchaseContract(uint PurchaseId, uint txnValue) isActive public payable {
         //http://solidity.readthedocs.io/en/develop/control-structures.html#creating-contracts-via-new
         //Above link has example of creating + endowing contract with ether
-        Purchase newPurch = (new Purchase).value(purchases[PurchaseId].txnValue)(PurchaseId);
+        Purchase newPurch = (new Purchase).value(purchases[PurchaseId].txnValue)();
+        //QUESTION why am I getting this error?!?
     }
 
     //Pause contract operation
