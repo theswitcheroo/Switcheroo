@@ -11,7 +11,7 @@ import "Purchase_Factory.sol";
 
 //------------------------------------------------------------------------
 //CHILD CONTRACT
-contract Purchase is PurchaseCreator {
+contract Purchase {
     uint public txnValue;
     uint public price;
     uint public shipping_cost;
@@ -21,13 +21,16 @@ contract Purchase is PurchaseCreator {
     uint public fee_buyer;
     uint public fee_seller;
     //address public seller;
-    PurchaseCreator public seller;
     address public buyer;
     address public admin;
     enum Status {initialized, locked, seller_canceled, disputed, delivered,
         dispute_canceled, return_delivered, completed, inactive}
     Status public status;
-    uint public PurchaseId;
+    PurchaseCreator public seller;
+    uint public PurchaseId; //QUESTION how do I pass this through from parent?
+    uint public _seller_payout;
+    uint public _buyer_payout;
+    uint public _admin_payout;
 
 
     function Purchase()
@@ -36,7 +39,7 @@ contract Purchase is PurchaseCreator {
     {
         //require(msg.value > 0); FLAG disabled feature
         txnValue = msg.value; //QUESTION does this need to be referencing PurchaseCreator?
-        seller = PurchaseCreator[PurchaseId].seller;
+        seller = PurchaseCreator.purchases[PurchaseId].seller;
         admin = PurchaseCreator.owner;
         //price = txnValue;
         //fee_seller = 1;
