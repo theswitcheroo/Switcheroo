@@ -11,7 +11,7 @@ contract PurchaseCreator {
     struct PurchaseData {
         address buyer;
         address seller;
-        uint price;
+        uint txnValue;
     }
 
     //Mapping Transaction ID's to each transaction so we can easily track later
@@ -19,16 +19,18 @@ contract PurchaseCreator {
     mapping(uint => PurchaseData) public purchases;
 
     //Creates new struct value & ties it to a PurchaseId key in the mapping
-    function newPurchase(address buyer, address seller, uint price) returns (uint PurchaseId) {
+    function newPurchaseLog(address buyer, address seller, uint txnValue) public returns (uint PurchaseId) {
         PurchaseId = nextPurchaseId++;
-        purchases[PurchaseId] = PurchaseData(buyer, seller, price);
+        purchases[PurchaseId] = PurchaseData(buyer, seller, txnValue);
 
         return PurchaseId;
     }
 
     //Creates new Purchase child contract with the PurchaseId
     //Can use PurchaseId in the child contract to pull in PurchaseData struct
-    function newPurchase(uint PurchaseId) payable {
-        address newPurch = new Purchase(PurchaseId);
+    function newPurchaseContract(uint PurchaseId) public payable {
+        //http://solidity.readthedocs.io/en/develop/control-structures.html#creating-contracts-via-new
+        //Above link has example of creating + endowing contract with ether
+        Purchase newPurch = (new Purchase).value(purchases[PurchaseId].txnValue)(PurchaseId);
     }
 }

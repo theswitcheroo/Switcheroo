@@ -81,7 +81,7 @@ contract Purchase {
     event AdminPayout();
 
     // TODO: constant ?? See here: http://solidity.readthedocs.io/en/develop/contracts.html?view-functions#view-functions
-    function inState(Status _status) constant bool {
+    function inState(Status _status) {
         return status == _status;
     }
 
@@ -156,7 +156,7 @@ contract Purchase {
         requireStatus(Status.locked)
     {
         BuyerDisputed();
-        status = Status.disputed
+        status = Status.disputed;
     }
 
     // Allows buyer to withdraw funds depending on the terminal state
