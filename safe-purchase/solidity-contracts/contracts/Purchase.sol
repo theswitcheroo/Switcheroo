@@ -12,7 +12,7 @@ import "Purchase_Factory.sol";
 //------------------------------------------------------------------------
 //CHILD CONTRACT
 contract Purchase {
-    uint public initialValue;
+    uint public txnValue;
     uint public price;
     uint public shipping_cost;
     uint public shipping_cost_return;
@@ -35,9 +35,9 @@ contract Purchase {
         payable
     {
         require(msg.value > 0);
-        initialValue = msg.value;
-        seller = msg.sender;
-        //admin = ?? TODO - figure out how to set us as admin
+        txnValue = msg.value;
+        seller = msg.sender; //TODO this isn't right, think it will set the creator contract as seller
+        PurchaseCreator admin = PurchaseCreator.owner; //TODO lookup inheritance
         price = PurchaseCreator.price;
         fee_seller = 1;
         status = Status.initialized;

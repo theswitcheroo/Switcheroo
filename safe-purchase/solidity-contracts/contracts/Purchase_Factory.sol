@@ -9,7 +9,8 @@ import "Purchase.sol";
 
 contract PurchaseCreator {
     struct PurchaseData {
-        address buyer;
+        //address buyer;
+        //TODO check if we can pass buyer from child contract back to the mapping
         address seller;
         uint txnValue;
     }
@@ -41,9 +42,9 @@ contract PurchaseCreator {
 
     //Creates new struct value & ties it to a PurchaseId key in the mapping
     //QUESTION do we need to make this the constructor function?
-    function newPurchaseLog(address buyer, address seller, uint txnValue) isActive public returns (uint PurchaseId) {
+    function newPurchaseLog(address seller, uint txnValue) isActive public returns (uint PurchaseId) {
         PurchaseId = nextPurchaseId++;
-        purchases[PurchaseId] = PurchaseData(buyer, seller, txnValue);
+        purchases[PurchaseId] = PurchaseData(seller, txnValue);
 
         return PurchaseId;
     }
