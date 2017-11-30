@@ -39,7 +39,7 @@ contract Purchase {
     {
         //require(msg.value > 0); FLAG disabled feature
         txnValue = msg.value; //QUESTION does this need to be referencing PurchaseCreator?
-        seller = PurchaseCreator.purchases[PurchaseId].seller;
+        seller = PurchaseCreator.seller; //QUESTION how do I correctly reference parent?
         admin = PurchaseCreator.owner;
         //price = txnValue;
         //fee_seller = 1;

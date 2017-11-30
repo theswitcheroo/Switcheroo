@@ -55,7 +55,7 @@ contract PurchaseCreator {
         //http://solidity.readthedocs.io/en/develop/control-structures.html#creating-contracts-via-new
         //Above link has example of creating + endowing contract with ether
         Purchase newPurch = (new Purchase).value(purchases[PurchaseId].txnValue)();
-        //QUESTION why am I getting this error?!?
+        //QUESTION do I need to pass through PurchaseId as argument at end?
     }
 
     //Pause contract operation
