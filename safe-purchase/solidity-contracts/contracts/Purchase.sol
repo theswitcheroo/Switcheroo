@@ -6,7 +6,7 @@ import "Purchase_Factory.sol";
 // Front end interaction hooks? - Handled by web3
 // Add final withdraws - DONE
 // Add in dispute function for buyer - DONE
-// Add in deposits - currently just txn value
+// Add in deposits
 // Setup for master & child contracts
 
 //------------------------------------------------------------------------
@@ -20,13 +20,12 @@ contract Purchase {
     uint public deposit_seller;
     uint public fee_buyer;
     uint public fee_seller;
-    //address public seller;
+    address public seller;
     address public buyer;
     address public admin;
     enum Status {initialized, locked, seller_canceled, disputed, delivered,
         dispute_canceled, return_delivered, completed, inactive}
     Status public status;
-    PurchaseCreator public seller;
     uint public PurchaseId; //QUESTION how do I pass this through from parent?
     uint public _seller_payout;
     uint public _buyer_payout;
@@ -37,9 +36,9 @@ contract Purchase {
         public
         payable
     {
-        //require(msg.value > 0); FLAG disabled feature
-        txnValue = msg.value; //QUESTION does this need to be referencing PurchaseCreator?
-        seller = PurchaseCreator.seller; //QUESTION how do I correctly reference parent?
+        require(msg.value > 0);
+        txnValue = msg.value;
+        seller = msg.sender;
         admin = PurchaseCreator.owner;
         //price = txnValue;
         //fee_seller = 1;
@@ -75,7 +74,6 @@ contract Purchase {
     event PurchaseApproved();
     event SellerCanceled();
     event ItemDelivered();
-    event ItemAccepted(); //still need this?
     event BuyerDisputed();
     event DisputeCanceled();
     event ReturnDelivered();
@@ -94,7 +92,7 @@ contract Purchase {
     function abort()
         onlySeller
         requireStatus(Status.initialized)
-        private
+        public
     {
         // TODO: decide where to put events in functions
         Aborted();
@@ -110,9 +108,9 @@ contract Purchase {
     function acceptPurchaseTerms()
         requireStatus(Status.initialized)
         onlyBuyer
-        //condition(msg.value == price) FLAG disabled feature
+        condition(msg.value == txnValue)
         payable
-        private
+        public
     {
         PurchaseApproved();
         buyer = msg.sender;
@@ -124,9 +122,9 @@ contract Purchase {
     function setStatusDelivered()
         onlyAdmin
         requireStatus(Status.locked)
-        private
+        public
     {
-        ItemAccepted();
+        ItemDelivered();
         status = Status.delivered;
     }
 
@@ -134,27 +132,29 @@ contract Purchase {
     function setStatusReturnDelivered()
         onlyAdmin
         requireStatus(Status.disputed)
-        private
+        public
     {
         ReturnDelivered();
         status = Status.return_delivered;
     }
 
     // Seller failed to mail item within 72 hrs of buyer locking money
+    //TODO can calculate this on chain so we avoid a new call
     function setStatusSellerCanceled()
         onlyAdmin
         requireStatus(Status.locked)
-        private
+        public
     {
         SellerCanceled();
         status = Status.seller_canceled;
     }
 
     // Buyer failed to mail returned item within 72 hrs of disputing
+    //TODO can calculate this on chain so we avoid a new call
     function setStatusDisputeCanceled()
         onlyAdmin
         requireStatus(Status.disputed)
-        private
+        public
     {
         DisputeCanceled();
         status = Status.dispute_canceled;
@@ -164,15 +164,14 @@ contract Purchase {
     function setStatusDisputed()
         onlyAdmin //TODO decide if we are letting buyer do this or only us
         requireStatus(Status.locked)
-        private
+        public
     {
         BuyerDisputed();
         status = Status.disputed;
     }
 
     // Allows buyer to withdraw funds depending on the terminal state
-    //FLAG disabled features
-    /*function withdrawBuyerFunds() //TODO test that this can't be called during a status it shouldn't be (e.g. initialized)
+    function withdrawBuyerFunds() //TODO test that this can't be called during a status it shouldn't be (e.g. initialized)
         onlyBuyer
         private
     {
@@ -250,7 +249,7 @@ contract Purchase {
         }
 
         BuyerPayout();
-    }*/
+    }
 
     // Allows seller to withdraw funds depending on the terminal state
     function withdrawSellerFunds()
@@ -259,13 +258,12 @@ contract Purchase {
     {
         if(inState(Status.delivered)) {
             // Check that this func hasn't already been called for this txn
-            //FLAG disabled features
-            //require(deposit_seller != 0);
+            require(deposit_seller != 0);
             require(price != 0);
-            //require(fee_seller != 0);
+            require(fee_seller != 0);
 
             // Run payout calculations & zero out balances
-            _seller_payout = price; //+ deposit_seller - fee_seller;
+            _seller_payout = price + deposit_seller - fee_seller;
             _admin_payout = fee_seller;
             price = 0;
             deposit_seller = 0;
@@ -311,9 +309,9 @@ contract Purchase {
 
         } else if(inState(Status.seller_canceled)) {
             // Check that this func hasn't already been called for this txn
-            //require(deposit_seller != 0);
-            //require(shipping_cost != 0);
-            //require(fee_seller != 0);
+            require(deposit_seller != 0);
+            require(shipping_cost != 0);
+            require(fee_seller != 0);
 
             // Run payout calculations & zero out balances
             _seller_payout = deposit_seller - fee_seller - shipping_cost;
