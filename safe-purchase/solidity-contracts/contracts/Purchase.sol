@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import "Purchase_Factory.sol";
+import "PurchaseCreator.sol";
 
 // To do
 // Delivery confirmation function - DONE
