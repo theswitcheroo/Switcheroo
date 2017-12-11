@@ -39,7 +39,7 @@ contract SimplePurchase {
         require(msg.value > 0);
         txnValue = msg.value;
         seller = msg.sender;
-        admin = PurchaseCreator.owner;
+        //admin = PurchaseCreator.owner;
         //price = txnValue;
         //fee_seller = 1;
         status = Status.initialized;
@@ -72,18 +72,18 @@ contract SimplePurchase {
 
     event Aborted();
     event PurchaseApproved();
-    event SellerCanceled();
+    //event SellerCanceled();
     event ItemDelivered();
-    event BuyerDisputed();
-    event DisputeCanceled();
-    event ReturnDelivered();
+    //event BuyerDisputed();
+    //event DisputeCanceled();
+    //event ReturnDelivered();
     event BuyerPayout();
     event SellerPayout();
-    event AdminPayout();
+    //event AdminPayout();
 
-    // TODO: constant ?? See here: http://solidity.readthedocs.io/en/develop/contracts.html?view-functions#view-functions
-    function inState(Status _status) view private {
-        return status == _status;
+    function inState(Status _status) view private returns(Status) {
+        status == _status;
+        return status;
     }
 
     /// Abort the purchase and reclaim the ether.
@@ -94,7 +94,6 @@ contract SimplePurchase {
         requireStatus(Status.initialized)
         public
     {
-        // TODO: decide where to put events in functions
         Aborted();
         status = Status.inactive;
 
@@ -118,7 +117,7 @@ contract SimplePurchase {
         status = Status.locked;
     }
 
-    // This will release the locked ether
+    // This sets status to allow seller withdrawal
     function setStatusDelivered()
         onlyAdmin
         requireStatus(Status.locked)
@@ -127,7 +126,7 @@ contract SimplePurchase {
         ItemDelivered();
         status = Status.delivered;
     }
-
+/* Contains buyer withdraw, various status changes
     // Disputed item has been returned to seller
     function setStatusReturnDelivered()
         onlyAdmin
@@ -169,9 +168,9 @@ contract SimplePurchase {
         BuyerDisputed();
         status = Status.disputed;
     }
-
+*/
     // Allows buyer to withdraw funds depending on the terminal state
-    function withdrawBuyerFunds() //TODO test that this can't be called during a status it shouldn't be (e.g. initialized)
+    /*function withdrawBuyerFunds() //TODO test that this can't be called during a status it shouldn't be (e.g. initialized)
         onlyBuyer
         private
     {
@@ -249,32 +248,32 @@ contract SimplePurchase {
         }
 
         BuyerPayout();
-    }
+    }*/
 
     // Allows seller to withdraw funds depending on the terminal state
     function withdrawSellerFunds()
         onlySeller
         private
     {
-        if(inState(Status.delivered)) {
+        if(status == Status.delivered)) {
             // Check that this func hasn't already been called for this txn
-            require(deposit_seller != 0);
+            //require(deposit_seller != 0);
             require(price != 0);
-            require(fee_seller != 0);
+            //require(fee_seller != 0);
 
             // Run payout calculations & zero out balances
-            _seller_payout = price + deposit_seller - fee_seller;
-            _admin_payout = fee_seller;
+            _seller_payout = price;// + deposit_seller - fee_seller;
+            //_admin_payout = fee_seller;
             price = 0;
-            deposit_seller = 0;
-            fee_seller = 0;
+            //deposit_seller = 0;
+            //fee_seller = 0;
 
             // Transfer payouts
-            admin.transfer(_admin_payout);
+            //admin.transfer(_admin_payout);
             seller.transfer(_seller_payout);
 
-        } else if(inState(Status.return_delivered)) {
-            // Check that this func hasn't already been called for this txn
+        } /*else if(inState(Status.return_delivered)) {
+            //Check that this func hasn't already been called for this txn
             require(deposit_seller != 0);
             require(shipping_cost_return != 0);
             require(fee_seller != 0);
@@ -326,7 +325,7 @@ contract SimplePurchase {
 
         } else {
             revert;
-        }
+        }*/
 
         SellerPayout();
     }
