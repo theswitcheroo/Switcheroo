@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import "Purchase.sol";
+import "SimplePurchase.sol";
 
 //----------------------------------------------------------------
 //FACTORY CONTRACT - Master contract that creates individual purchase contracts
@@ -21,7 +21,7 @@ contract PurchaseCreator {
 
     //Set variables for pausing contract (pauseContract) function
     bool private stopped = false;
-    address private owner;
+    address public owner;
 
     modifier isAdmin() {
         require(msg.sender == owner);
@@ -41,7 +41,6 @@ contract PurchaseCreator {
     }
 
     //Creates new struct value & ties it to a PurchaseId key in the mapping
-    //QUESTION do we need to make this the constructor function?
     function newPurchaseLog(address seller, uint txnValue) isActive public returns (uint PurchaseId) {
         PurchaseId = nextPurchaseId++;
         purchases[PurchaseId] = PurchaseData(seller, txnValue);
@@ -51,10 +50,12 @@ contract PurchaseCreator {
 
     //Creates new Purchase child contract with the PurchaseId
     //Can use PurchaseId in the child contract to pull in PurchaseData struct
-    function newPurchaseContract(uint PurchaseId, uint txnValue) isActive public payable {
+    function newSimplePurchaseContract(uint PurchaseId) isActive public payable returns(address) {
         //http://solidity.readthedocs.io/en/develop/control-structures.html#creating-contracts-via-new
         //Above link has example of creating + endowing contract with ether
-        Purchase newPurch = (new Purchase).value(purchases[PurchaseId].txnValue)();
+        SimplePurchase newPurch = (new SimplePurchase).value(purchases[PurchaseId].txnValue)();
+
+        return newPurch;
         //QUESTION do I need to pass through PurchaseId as argument at end?
     }
 
