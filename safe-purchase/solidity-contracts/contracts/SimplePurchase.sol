@@ -5,23 +5,24 @@ import "PurchaseCreator.sol";
 //CHILD CONTRACT
 contract SimplePurchase {
     uint public txnValue;
-    address public seller;
+    address public _seller;
     address public buyer;
     address public admin;
     enum Status {initialized, locked, seller_canceled, delivered, inactive}
     Status public status;
-    uint public PurchaseId; //QUESTION how do I pass this through from parent?
+    uint public _PurchaseId;
 
 
-    function SimplePurchase()
+    function SimplePurchase(address seller, uint PurchaseId)
         public
         payable
     {
         require(msg.value > 0);
         txnValue = msg.value;
-        seller = msg.sender;
+        _seller = seller;
         admin = 0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB;
         status = Status.initialized;
+        _PurchaseId = PurchaseId;
     }
 
     modifier condition(bool _condition) {
@@ -35,7 +36,7 @@ contract SimplePurchase {
     }
 
     modifier onlySeller() {
-        require(msg.sender == seller);
+        require(msg.sender == _seller);
         _;
     }
 
@@ -79,7 +80,7 @@ contract SimplePurchase {
 
         uint _balance = this.balance;
         _balance = 0;
-        seller.transfer(_balance);
+        _seller.transfer(_balance);
     }
 
     /// Approve the purchase as buyer.
@@ -149,7 +150,7 @@ contract SimplePurchase {
 
 
         // Transfer payouts
-        seller.transfer(_balance);
+        _seller.transfer(_balance);
         _balance = 0;
         SellerPayout();
     }

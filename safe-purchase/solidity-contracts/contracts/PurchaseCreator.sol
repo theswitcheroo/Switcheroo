@@ -41,22 +41,27 @@ contract PurchaseCreator {
     }
 
     //Creates new struct value & ties it to a PurchaseId key in the mapping
-    function newPurchaseLog(address seller, uint txnValue) isActive public returns (uint PurchaseId) {
+    /*function newPurchaseLog(address seller, uint txnValue) isActive public returns (uint PurchaseId) {
         PurchaseId = nextPurchaseId++;
+        seller = msg.sender;
         purchases[PurchaseId] = PurchaseData(seller, txnValue);
 
         return PurchaseId;
-    }
+    }*/
 
     //Creates new Purchase child contract with the PurchaseId
     //Can use PurchaseId in the child contract to pull in PurchaseData struct
-    function newSimplePurchaseContract(uint PurchaseId) isActive public payable returns(address) {
-        //http://solidity.readthedocs.io/en/develop/control-structures.html#creating-contracts-via-new
-        //Above link has example of creating + endowing contract with ether
-        SimplePurchase newPurch = (new SimplePurchase).value(purchases[PurchaseId].txnValue)();
+    function newSimplePurchaseContract(address seller, uint txnValue) isActive public payable returns (SimplePurchase _newPurch, uint PurchaseId) {
 
-        return newPurch;
-        //QUESTION do I need to pass through PurchaseId as argument at end?
+        //Increment PurchaseId
+        PurchaseId = nextPurchaseId++;
+        seller = msg.sender;
+        txnValue = msg.value;
+        purchases[PurchaseId] = PurchaseData(seller, txnValue);
+
+        _newPurch = (new SimplePurchase).value(txnValue)(seller, PurchaseId);
+
+        return(_newPurch, PurchaseId);
     }
 
     //Pause contract operation
