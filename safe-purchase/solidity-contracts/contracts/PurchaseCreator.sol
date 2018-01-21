@@ -1,18 +1,16 @@
-pragma solidity ^0.4.18;
-import "SimplePurchase.sol";
+pragma solidity ^0.4.19;
+import "./SimplePurchase.sol";
 
 //----------------------------------------------------------------
 //FACTORY CONTRACT - Master contract that creates individual purchase contracts
 
-//Info on mapping found here: https://ethereum.stackexchange.com/questions/9893/how-does-mapping-in-solidity-work#9894
+//Info on mapping: https://ethereum.stackexchange.com/questions/9893/how-does-mapping-in-solidity-work#9894
 //Info on contract creation: http://solidity.readthedocs.io/en/develop/contracts.html
 
 contract PurchaseCreator {
     struct PurchaseData {
         address seller;
         uint txnValue;
-        //address buyer;
-        //TODO check if we can pass buyer from child contract back to the mapping
     }
 
     //Mapping Transaction ID's to each transaction so we can easily track later
@@ -23,6 +21,7 @@ contract PurchaseCreator {
     bool private stopped = false;
     address public owner;
 
+    //Enforce ownership for admin only functions
     modifier isAdmin() {
         require(msg.sender == owner);
         _;
@@ -35,30 +34,20 @@ contract PurchaseCreator {
     }
 
     //Set Switcheroo as owner of contract
-    //TODO make sure we are original msg.sender of the PurchaseCreator, and that this doesn't change
     function PurchaseCreator() public {
         owner = msg.sender;
     }
 
-    //Creates new struct value & ties it to a PurchaseId key in the mapping
-    /*function newPurchaseLog(address seller, uint txnValue) isActive public returns (uint PurchaseId) {
-        PurchaseId = nextPurchaseId++;
-        seller = msg.sender;
-        purchases[PurchaseId] = PurchaseData(seller, txnValue);
-
-        return PurchaseId;
-    }*/
-
-    //Creates new Purchase child contract with the PurchaseId
-    //Can use PurchaseId in the child contract to pull in PurchaseData struct
+    //Creates new Purchase child contract with a PurchaseId
     function newSimplePurchaseContract(address seller, uint txnValue) isActive public payable returns (SimplePurchase _newPurch, uint PurchaseId) {
 
-        //Increment PurchaseId
+        //Increment PurchaseId, set values for PurchaseData struct
         PurchaseId = nextPurchaseId++;
         seller = msg.sender;
         txnValue = msg.value;
         purchases[PurchaseId] = PurchaseData(seller, txnValue);
 
+        //Create new SimplePurchase child contract
         _newPurch = (new SimplePurchase).value(txnValue)(seller, PurchaseId);
 
         return(_newPurch, PurchaseId);
