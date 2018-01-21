@@ -1,5 +1,5 @@
 pragma solidity ^0.4.18;
-import "PurchaseCreator.sol";
+import "./PurchaseCreator.sol";
 
 //------------------------------------------------------------------------
 //CHILD CONTRACT
@@ -20,7 +20,7 @@ contract SimplePurchase {
         require(msg.value > 0);
         txnValue = msg.value;
         _seller = seller;
-        admin = 0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB;
+        admin = 0x627306090abaB3A6e1400e9345bC60c78a8BEf57;
         status = Status.initialized;
         _PurchaseId = PurchaseId;
     }
@@ -118,7 +118,7 @@ contract SimplePurchase {
     }
 
     // Allows buyer to withdraw funds depending on the terminal state
-    function withdrawBuyerFunds() //TODO test that this can't be called during a status it shouldn't be (e.g. initialized)
+    function withdrawBuyerFunds()
         onlyBuyer
         requireStatus(Status.seller_canceled)
         public
