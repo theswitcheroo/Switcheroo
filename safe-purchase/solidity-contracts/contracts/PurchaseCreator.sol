@@ -8,6 +8,8 @@ import "./SimplePurchase.sol";
 //Info on contract creation: http://solidity.readthedocs.io/en/develop/contracts.html
 
 contract PurchaseCreator {
+
+    //Create struct to hold txn data
     struct PurchaseData {
         address seller;
         uint txnValue;
