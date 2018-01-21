@@ -9,7 +9,7 @@ import "./SimplePurchase.sol";
 
 contract PurchaseCreator {
 
-    //Create struct to hold txn data
+    //Create struct to hold txn dat
     struct PurchaseData {
         address seller;
         uint txnValue;
